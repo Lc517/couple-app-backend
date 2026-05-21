@@ -1,8 +1,9 @@
+import traceback
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.database import engine, Base
+from app.database import engine, Base, SessionLocal
 from app.routers import auth, vocabulary, checkin, weather, period, schedule
 from app.models import User, Word, WordProgress, DailyCheckin, Period, Schedule
 
@@ -10,7 +11,12 @@ from app.models import User, Word, WordProgress, DailyCheckin, Period, Schedule
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: 创建数据库表
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("Database tables created successfully!")
+    except Exception as e:
+        print(f"Failed to create tables: {e}")
+        traceback.print_exc()
     yield
 
 
@@ -37,3 +43,15 @@ app.include_router(schedule.router)
 @app.get("/")
 def root():
     return {"message": "Couple App API is running!", "docs": "/docs"}
+
+
+@app.get("/debug")
+def debug():
+    """测试数据库连接"""
+    try:
+        db = SessionLocal()
+        result = db.execute(db.query(User).statement).fetchall()
+        db.close()
+        return {"status": "ok", "user_count": len(result)}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "trace": traceback.format_exc()}
