@@ -34,7 +34,7 @@ def parse_weeks(weeks_str: str) -> list[int]:
 @router.get("/today")
 def get_today_schedule(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     today = date.today()
-    day_of_week = today.isoweek()  # 1=Monday, 7=Sunday
+    day_of_week = today.isoweekday()  # 1=Monday, 7=Sunday
     current_week = get_current_week()
 
     if day_of_week > 5:  # 周六日无课
