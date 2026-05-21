@@ -75,4 +75,4 @@ def get_schedule_by_day(day: int, db: Session = Depends(get_db), user: User = De
     } for c in courses]
 
     result.sort(key=lambda x: x["period"])
-    return {"day": day, "courses": result}
+    return {"day": day, "week": get_current_week(), "courses": result}
