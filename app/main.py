@@ -1,14 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
 from app.database import engine, Base
 from app.routers import auth, vocabulary, checkin, weather, period, schedule
+from app.models import User, Word, WordProgress, DailyCheckin, Period, Schedule
 
-# 创建所有表 (数据库可用时)
-try:
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: 创建数据库表
     Base.metadata.create_all(bind=engine)
-except Exception:
-    pass
+    yield
+
+
+app = FastAPI(title="Couple App API", version="1.0.0", lifespan=lifespan)
 
 app = FastAPI(title="Couple App API", version="1.0.0")
 
