@@ -42,7 +42,11 @@ def generate_tips(weather_data: dict, forecast: dict) -> str:
 async def get_weather(lat: float = 29.03, lon: float = 111.69):
     """获取天气信息，传入经纬度，默认常德"""
     if not QWEATHER_KEY:
-        return {"error": "未配置天气API密钥", "tips": "请配置 QWEATHER_KEY"}
+        return {
+            "current": {"temp": "--", "text": "未配置天气API", "icon": None, "humidity": "--", "wind_scale": "--"},
+            "tomorrow": {"temp_max": "--", "temp_min": "--", "text_day": "--", "text_night": "--", "icon_day": None, "precip": "0", "wind_scale": "--"},
+            "tips": "请在服务器配置 QWEATHER_KEY",
+        }
 
     location = f"{lon},{lat}"
 
