@@ -1,5 +1,4 @@
 import os
-import traceback
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
