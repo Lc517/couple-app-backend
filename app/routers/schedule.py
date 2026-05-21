@@ -1,0 +1,78 @@
+from datetime import date
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models.schedule import Schedule
+from app.models.user import User
+from app.routers.auth import get_current_user
+
+router = APIRouter(prefix="/api/schedule", tags=["schedule"])
+
+# 当前学期第1周的起始日期 (需要根据实际校历调整)
+SEMESTER_START = date(2026, 2, 23)  # 示例：2026年春季学期第1周
+
+
+def get_current_week() -> int:
+    today = date.today()
+    delta = (today - SEMESTER_START).days
+    return max(1, delta // 7 + 1)
+
+
+def parse_weeks(weeks_str: str) -> list[int]:
+    """解析周次字符串，如 '2-13' -> [2,3,4,...,13], '4,6,8' -> [4,6,8]"""
+    result = []
+    for part in weeks_str.split(","):
+        if "-" in part:
+            start, end = part.split("-")
+            result.extend(range(int(start), int(end) + 1))
+        else:
+            result.append(int(part))
+    return result
+
+
+@router.get("/today")
+def get_today_schedule(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    today = date.today()
+    day_of_week = today.isoweek()  # 1=Monday, 7=Sunday
+    current_week = get_current_week()
+
+    if day_of_week > 5:  # 周六日无课
+        return {"day": day_of_week, "week": current_week, "courses": []}
+
+    courses = db.query(Schedule).filter(Schedule.day_of_week == day_of_week).all()
+
+    result = []
+    for c in courses:
+        weeks = parse_weeks(c.weeks) if c.weeks else []
+        if current_week in weeks or not c.weeks:
+            result.append({
+                "id": c.id,
+                "period": c.period,
+                "course_name": c.course_name,
+                "classroom": c.classroom,
+                "teacher": c.teacher,
+            })
+
+    result.sort(key=lambda x: x["period"])
+    return {"day": day_of_week, "week": current_week, "courses": result}
+
+
+@router.get("/{day}")
+def get_schedule_by_day(day: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    if day < 1 or day > 7:
+        return {"courses": []}
+
+    courses = db.query(Schedule).filter(Schedule.day_of_week == day).all()
+
+    result = [{
+        "id": c.id,
+        "period": c.period,
+        "course_name": c.course_name,
+        "classroom": c.classroom,
+        "teacher": c.teacher,
+        "weeks": c.weeks,
+    } for c in courses]
+
+    result.sort(key=lambda x: x["period"])
+    return {"day": day, "courses": result}
