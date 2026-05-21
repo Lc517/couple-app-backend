@@ -16,8 +16,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Couple App API", version="1.0.0", lifespan=lifespan)
 
-app = FastAPI(title="Couple App API", version="1.0.0")
-
 # CORS - 允许 Android 应用访问
 app.add_middleware(
     CORSMiddleware,
