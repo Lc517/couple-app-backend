@@ -10,7 +10,7 @@ from app.routers.auth import get_current_user
 router = APIRouter(prefix="/api/schedule", tags=["schedule"])
 
 # 当前学期第1周的起始日期 (需要根据实际校历调整)
-SEMESTER_START = date(2026, 2, 23)  # 示例：2026年春季学期第1周
+SEMESTER_START = date(2026, 3, 2)  # 2026年春季学期第1周
 
 
 def get_current_week() -> int:
