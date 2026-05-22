@@ -73,20 +73,26 @@ def get_today_schedule(db: Session = Depends(get_db), user: User = Depends(get_c
 @router.get("/{day}")
 def get_schedule_by_day(day: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     if day < 1 or day > 7:
-        return {"courses": []}
+        return {"day": day, "week": get_current_week(), "courses": []}
 
+    current_week = get_current_week()
     courses = db.query(Schedule).filter(Schedule.day_of_week == day).all()
 
-    result = [{
-        "id": c.id,
-        "period": c.period,
-        "course_name": c.course_name,
-        "classroom": c.classroom,
-        "teacher": c.teacher,
-        "weeks": c.weeks,
-        "start_time": PERIOD_TIMES.get(c.period, {}).get("start_time", ""),
-        "end_time": PERIOD_TIMES.get(c.period, {}).get("end_time", ""),
-    } for c in courses]
+    result = []
+    for c in courses:
+        weeks = parse_weeks(c.weeks) if c.weeks else []
+        if current_week in weeks or not c.weeks:
+            times = PERIOD_TIMES.get(c.period, {})
+            result.append({
+                "id": c.id,
+                "period": c.period,
+                "course_name": c.course_name,
+                "classroom": c.classroom,
+                "teacher": c.teacher,
+                "weeks": c.weeks,
+                "start_time": times.get("start_time", ""),
+                "end_time": times.get("end_time", ""),
+            })
 
     result.sort(key=lambda x: x["period"])
     return {"day": day, "week": get_current_week(), "courses": result}
