@@ -9,8 +9,17 @@ from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/schedule", tags=["schedule"])
 
-# 当前学期第1周的起始日期 (需要根据实际校历调整)
-SEMESTER_START = date(2026, 3, 2)  # 2026年春季学期第1周
+# 当前学期第1周的起始日期
+SEMESTER_START = date(2026, 3, 2)
+
+# 每节课的时间
+PERIOD_TIMES = {
+    1: {"start_time": "08:00", "end_time": "08:45"},
+    2: {"start_time": "08:50", "end_time": "09:35"},
+    3: {"start_time": "10:00", "end_time": "10:45"},
+    4: {"start_time": "10:50", "end_time": "11:35"},
+    5: {"start_time": "14:00", "end_time": "14:45"},
+}
 
 
 def get_current_week() -> int:
@@ -46,12 +55,15 @@ def get_today_schedule(db: Session = Depends(get_db), user: User = Depends(get_c
     for c in courses:
         weeks = parse_weeks(c.weeks) if c.weeks else []
         if current_week in weeks or not c.weeks:
+            times = PERIOD_TIMES.get(c.period, {})
             result.append({
                 "id": c.id,
                 "period": c.period,
                 "course_name": c.course_name,
                 "classroom": c.classroom,
                 "teacher": c.teacher,
+                "start_time": times.get("start_time", ""),
+                "end_time": times.get("end_time", ""),
             })
 
     result.sort(key=lambda x: x["period"])
@@ -72,6 +84,8 @@ def get_schedule_by_day(day: int, db: Session = Depends(get_db), user: User = De
         "classroom": c.classroom,
         "teacher": c.teacher,
         "weeks": c.weeks,
+        "start_time": PERIOD_TIMES.get(c.period, {}).get("start_time", ""),
+        "end_time": PERIOD_TIMES.get(c.period, {}).get("end_time", ""),
     } for c in courses]
 
     result.sort(key=lambda x: x["period"])
