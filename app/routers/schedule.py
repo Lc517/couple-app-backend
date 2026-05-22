@@ -12,13 +12,13 @@ router = APIRouter(prefix="/api/schedule", tags=["schedule"])
 # 当前学期第1周的起始日期
 SEMESTER_START = date(2026, 3, 2)
 
-# 每节课的时间
+# 每节课的时间 (100分钟/节，课间休息20分钟)
 PERIOD_TIMES = {
-    1: {"start_time": "08:00", "end_time": "08:45"},
-    2: {"start_time": "08:50", "end_time": "09:35"},
-    3: {"start_time": "10:00", "end_time": "10:45"},
-    4: {"start_time": "10:50", "end_time": "11:35"},
-    5: {"start_time": "14:00", "end_time": "14:45"},
+    1: {"start_time": "08:00", "end_time": "09:40"},
+    2: {"start_time": "10:00", "end_time": "11:40"},
+    3: {"start_time": "14:00", "end_time": "15:40"},
+    4: {"start_time": "16:00", "end_time": "17:40"},
+    5: {"start_time": "19:00", "end_time": "20:40"},
 }
 
 
