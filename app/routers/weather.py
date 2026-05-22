@@ -35,6 +35,7 @@ def generate_tips(temp_max: float, temp_min: float, precip: float, wind: float, 
 async def get_weather(lat: float = 29.03, lon: float = 111.69):
     """获取天气信息，使用 Open-Meteo 免费 API"""
     async with httpx.AsyncClient() as client:
+        # 天气数据
         resp = await client.get("https://api.open-meteo.com/v1/forecast", params={
             "latitude": lat,
             "longitude": lon,
@@ -44,6 +45,14 @@ async def get_weather(lat: float = 29.03, lon: float = 111.69):
             "forecast_days": 2,
         })
         data = resp.json()
+
+        # 反向地理编码获取城市名
+        geo_resp = await client.get("https://nominatim.openstreetmap.org/reverse", params={
+            "lat": lat, "lon": lon, "format": "json", "accept-language": "zh-CN",
+        }, headers={"User-Agent": "CoupleApp/1.0"})
+        geo = geo_resp.json()
+        address = geo.get("address", {})
+        city = address.get("city") or address.get("state") or address.get("county", "")
 
     current = data.get("current", {})
     daily = data.get("daily", {})
@@ -67,6 +76,7 @@ async def get_weather(lat: float = 29.03, lon: float = 111.69):
     wind_scale = round(wind / 3.6)  # km/h to Beaufort scale (rough)
 
     return {
+        "location": city,
         "current": {
             "temp": str(round(current.get("temperature_2m", 0))),
             "text": WMO_CODES.get(current_code, "未知"),
